@@ -31,14 +31,22 @@ public class RSMClientDriver implements Observer {
 		  Thread.sleep(5000);
 		  
 		  //Send one player update. Do something similar each time the players information changed (X/Y cords, animation state etc.)
-		  client.setKey("test", "thisworks");
-		  client.sendPlayerData();
+		  
+		  for (int i  = 0; i < 1800; i++) {
+			  Thread.sleep(33);
+			  client.setKey("test", Integer.toString(i));
+			  client.sendPlayerData();
+		  }
 	 }
 
 	@Override
 	public void update(Observable o, Object arg) {
 		//Receive the last response from the server and process it
-		System.out.println("Server said: " + ((RSMClient) o).lastServerUpdate());
+		if (((RSMClient) o).lastResponce().responceType() == RSMServerResponce.Command) {
+			System.out.println("Server replyed with command: " + ((RSMClient) o).lastResponce().command());
+		} else if (((RSMClient) o).lastResponce().responceType() == RSMServerResponce.PlayerUpdate) {
+			System.out.println("Server replyed with command: " + ((RSMClient) o).lastResponce().playerTable().toString());
+		}
 		
 	}
 }

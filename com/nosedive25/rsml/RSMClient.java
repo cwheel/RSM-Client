@@ -14,7 +14,7 @@ public class RSMClient extends Observable {
 	private ArrayList<RSMGame> activeGames = new ArrayList<RSMGame>(); 
 	private DataOutputStream serverOut;;
 	private String currentGame;
-	private String lastServerUpdate;
+	private RSMServerResponce lastResponce;
 	
 	/*@desc Constructor for RSMClient, takes the server IP or hostname and port*/
 	public RSMClient(String host, int port)  throws UnknownHostException, IOException {
@@ -83,8 +83,8 @@ public class RSMClient extends Observable {
 	}
 	
 	/*@desc Returns the last update from the server*/
-	public String lastServerUpdate() {
-		return lastServerUpdate;
+	public RSMServerResponce lastResponce() {
+		return lastResponce;
 	}
 	
 	/*@desc Returns an array list of the currently active games on the server*/
@@ -107,7 +107,7 @@ public class RSMClient extends Observable {
 				} else if (input.contains("LEFT_GAME:")) {
 					//TODO: Use in future implementations
 				} else {
-					lastServerUpdate = input;
+					lastResponce = new RSMServerResponce(input);
 					
 					setChanged();
 				    notifyObservers();
