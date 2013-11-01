@@ -2,12 +2,24 @@ package com.nosedive25.rsml;
 
 import java.io.*;
 import java.net.*;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Observable;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.TrustManagerFactory;
+
 public class RSMClient extends Observable {
-	private Socket server;
+	private SSLSocket server;
 	private String clientID;
 	private Hashtable<String, String> sendVals;
 	private Hashtable<String, String> serverProperties;
@@ -16,9 +28,26 @@ public class RSMClient extends Observable {
 	private String currentGame;
 	private RSMServerResponce lastResponce;
 	
-	/*@desc Constructor for RSMClient, takes the server IP or hostname and port*/
-	public RSMClient(String host, int port)  throws UnknownHostException, IOException {
-		 server = new Socket(host, port);
+	private KeyStore keyStore;
+    private TrustManagerFactory tm;
+    private KeyManagerFactory km;
+	
+	/*@desc Constructor for RSMClient, takes the server IP or hostname, port, keystore path and the keystore password*/
+	public RSMClient(String host, int port, String keystorePath, String keystorePass)  throws UnknownHostException, IOException, NoSuchAlgorithmException, CertificateException, KeyStoreException, UnrecoverableKeyException, KeyManagementException {
+		 SecureRandom sr = new SecureRandom();
+		 sr.nextInt();
+	    	
+		 keyStore = KeyStore.getInstance("JKS");
+		 keyStore.load(new FileInputStream("clienttruststore"), keystorePass.toCharArray());
+		 tm = TrustManagerFactory.getInstance("SunX509");
+		 tm.init(keyStore);
+		 km = KeyManagerFactory.getInstance("SunX509");
+		 km.init(keyStore, keystorePass.toCharArray());
+		 
+		 SSLContext sslcon = SSLContext.getInstance("TLS");
+		 sslcon.init(km.getKeyManagers(), tm.getTrustManagers(), sr);
+		 server = (SSLSocket)sslcon.getSocketFactory().createSocket(host, port);
+		 
 		 sendVals = new Hashtable<String, String>();
 		 serverOut = new DataOutputStream(server.getOutputStream());
 		 
@@ -54,6 +83,15 @@ public class RSMClient extends Observable {
 		sendServerCommand("SET_PLAYER_ID:" + id);
 	}
 	
+	/*@desc Creates a new game on the server, if allowed*/
+	public void createGame(String game, String motd) throws Exception {
+		if (serverProperties.get("ClientsCanStartGames").equals("YES")) {
+			sendServerCommand("CREATE_GAME:" + game + "," + motd);
+		} else {
+			throw new Exception("Invalid Server Properties");
+		}
+	}
+	
 	/*@desc Adds the client to the game with the matching game id*/
 	public void joinGame(String id) throws IOException {
 		currentGame = id;
@@ -80,6 +118,11 @@ public class RSMClient extends Observable {
 	/*@desc Returns the current game*/
 	public String currentGame() {
 		return currentGame;
+	}
+	
+	/*@desc Returns the server name*/
+	public String serverName() {
+		return serverProperties.get("ServerName");
 	}
 	
 	/*@desc Returns the last update from the server*/

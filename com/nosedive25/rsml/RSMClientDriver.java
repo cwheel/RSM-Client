@@ -2,16 +2,21 @@ package com.nosedive25.rsml;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.Observable;
 import java.util.Observer;
 
 public class RSMClientDriver implements Observer {
 	
 	//Example game setup
-	public void startGame() throws UnknownHostException, IOException, InterruptedException {
+	public void startGame() throws UnknownHostException, IOException, InterruptedException, UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, CertificateException, KeyStoreException {
 		
 		  //Start a client
-		  RSMClient client = new RSMClient("localhost", 34674);
+		  RSMClient client = new RSMClient("localhost", 34674, "client", "testclient");
 		  
 		  //Add the current object as an observer to receive data from the server and other clients
 		  client.addObserver(this);
@@ -45,7 +50,7 @@ public class RSMClientDriver implements Observer {
 		if (((RSMClient) o).lastResponce().responceType() == RSMServerResponce.Command) {
 			System.out.println("Server replyed with command: " + ((RSMClient) o).lastResponce().command());
 		} else if (((RSMClient) o).lastResponce().responceType() == RSMServerResponce.PlayerUpdate) {
-			System.out.println("Server replyed with command: " + ((RSMClient) o).lastResponce().playerTable().toString());
+			System.out.println("Server replyed with playerupdate: " + ((RSMClient) o).lastResponce().playerTable().toString());
 		}
 		
 	}
